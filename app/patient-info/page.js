@@ -1,6 +1,8 @@
 // 전체 코드를 기반으로 유효성 검사 로직이 추가된 patient-info/page.js
 "use client";
 
+import api from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -94,16 +96,12 @@ export default function PatientInfoPage() {
       if (!token) return;
 
       try {
-        const res = await fetch(
-          // 이거까지 고쳤는데 왜
-          `${process.env.NEXT_PUBLIC_API_URL}/users/profile`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const data = await res.json();
+        const res = await api.get("/users/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = res.data;
 
         if (data) {
           setBasicInfo({
@@ -183,20 +181,13 @@ export default function PatientInfoPage() {
     };
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/profile`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await api.put("/users/profile", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      if (!res.ok) throw new Error("저장 실패");
-
+      // axios는 200~299 응답이면 무조건 try 블록 안으로 들어옵니다
       alert("✅ 환자 정보가 성공적으로 저장되었습니다.");
     } catch (err) {
       console.error("❌ 저장 중 오류:", err);
