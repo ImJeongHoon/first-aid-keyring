@@ -1,74 +1,82 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { AlertCircle, ArrowLeft, Eye, EyeOff } from "lucide-react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
+import api from "@/lib/api"; // 상단 import 추가
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { AlertCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(true)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectPath = searchParams.get("redirect") || "/"
-  const { login, isAuthenticated } = useAuth()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/";
+  const { login, isAuthenticated } = useAuth();
 
   // 이미 로그인한 경우 리디렉션
   useEffect(() => {
     if (isAuthenticated()) {
-      router.push(redirectPath)
+      router.push(redirectPath);
     }
-  }, [isAuthenticated, router, redirectPath])
+  }, [isAuthenticated, router, redirectPath]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
 
     if (!email || !password) {
-      setError("이메일과 비밀번호를 모두 입력해주세요")
-      return
+      setError("이메일과 비밀번호를 모두 입력해주세요");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      // 실제 로그인 로직 구현
-      console.log("로그인 정보:", email, password, "자동 로그인:", rememberMe)
+      // 🔐 실제 백엔드 로그인 요청
+      const response = await api.post("/users/login", {
+        email,
+        password,
+      });
 
-      // API 호출 시뮬레이션
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const token = response.data.token;
 
-      // 로그인 성공 - 사용자 정보 저장
-      // 실제 구현에서는 API 응답에서 사용자 정보를 받아와야 합니다
-      const userData = {
-        email: email,
-        name: email.split("@")[0], // 임시로 이메일에서 이름 추출
-        id: "user_" + Math.random().toString(36).substr(2, 9),
-      }
+      // 🔐 토큰 저장 (localStorage or 쿠키 등 선택 가능)
+      localStorage.setItem("token", token);
 
-      login(userData, rememberMe)
+      // 🧠 auth-context로 사용자 정보 설정
+      const userData = { email }; // 간단하게 저장
+      login(userData, rememberMe);
 
-      // 로그인 성공 후 리디렉션 경로로 이동
-      router.push(redirectPath)
+      // ✅ 리디렉션
+      router.push(redirectPath);
     } catch (err) {
-      setError("이메일 또는 비밀번호가 올바르지 않습니다")
+      setError("이메일 또는 비밀번호가 올바르지 않습니다");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white px-4 py-8 sm:py-12">
@@ -88,7 +96,9 @@ export default function LoginPage() {
               </div>
             </div>
           </Link>
-          <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-gray-900">FirstAidKeyring</h2>
+          <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-gray-900">
+            FirstAidKeyring
+          </h2>
           <p className="mt-2 text-sm text-gray-600">
             생명을 지키는 작은 태그
             <br />
@@ -98,12 +108,19 @@ export default function LoginPage() {
 
         <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm rounded-2xl">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xl sm:text-2xl font-bold text-center">로그인</CardTitle>
-            <CardDescription className="text-center">FirstAidKeyring 서비스 이용을 위해 로그인해주세요</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl font-bold text-center">
+              로그인
+            </CardTitle>
+            <CardDescription className="text-center">
+              FirstAidKeyring 서비스 이용을 위해 로그인해주세요
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
             {error && (
-              <Alert variant="destructive" className="mb-4 bg-red-50 border-red-200">
+              <Alert
+                variant="destructive"
+                className="mb-4 bg-red-50 border-red-200"
+              >
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>오류</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
@@ -114,7 +131,9 @@ export default function LoginPage() {
               <Alert className="mb-4 bg-blue-50 border-blue-200">
                 <AlertCircle className="h-4 w-4 text-blue-500" />
                 <AlertTitle className="text-blue-700">알림</AlertTitle>
-                <AlertDescription className="text-blue-600">이 기능을 사용하려면 로그인이 필요합니다.</AlertDescription>
+                <AlertDescription className="text-blue-600">
+                  이 기능을 사용하려면 로그인이 필요합니다.
+                </AlertDescription>
               </Alert>
             )}
 
@@ -159,7 +178,9 @@ export default function LoginPage() {
                     type="button"
                     className="absolute inset-y-0 right-0 flex items-center pr-3"
                     onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
+                    aria-label={
+                      showPassword ? "비밀번호 숨기기" : "비밀번호 표시"
+                    }
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-gray-400" />
@@ -177,7 +198,10 @@ export default function LoginPage() {
                   onCheckedChange={setRememberMe}
                   className="data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                 />
-                <Label htmlFor="remember-me" className="text-sm text-gray-600 cursor-pointer">
+                <Label
+                  htmlFor="remember-me"
+                  className="text-sm text-gray-600 cursor-pointer"
+                >
                   로그인 상태 유지
                 </Label>
               </div>
@@ -195,7 +219,9 @@ export default function LoginPage() {
             <p className="text-xs sm:text-sm text-gray-600">
               계정이 없으신가요?{" "}
               <Link
-                href={`/register${redirectPath !== "/" ? `?redirect=${redirectPath}` : ""}`}
+                href={`/register${
+                  redirectPath !== "/" ? `?redirect=${redirectPath}` : ""
+                }`}
                 className="font-medium text-red-600 hover:text-red-500 transition-colors duration-200"
               >
                 회원가입
@@ -215,5 +241,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
