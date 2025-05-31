@@ -51,8 +51,6 @@ export default function MyPage() {
     conditions: "고혈압",
     notes: "특이사항 없음",
   });
-  // asdf
-  // asdf
 
   const [emergencyContacts, setEmergencyContacts] = useState([
     { id: 1, name: "홍부모", relationship: "부모", phone: "010-9876-5432" },
