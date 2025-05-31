@@ -95,6 +95,7 @@ export default function PatientInfoPage() {
 
       try {
         const res = await fetch(
+          // 이거까지 고쳤는데 왜
           `${process.env.NEXT_PUBLIC_API_URL}/users/profile`,
           {
             headers: {
