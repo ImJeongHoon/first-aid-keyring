@@ -136,6 +136,17 @@ export default function PatientInfoPage() {
     setter((prev) => ({ ...prev, [field]: value }));
   };
 
+  const addEmergencyContact = () => {
+    if (newContact.name && newContact.phone) {
+      const newId =
+        emergencyContacts.length > 0
+          ? Math.max(...emergencyContacts.map((c) => c.id), 0) + 1
+          : 1;
+      setEmergencyContacts((prev) => [...prev, { ...newContact, id: newId }]);
+      setNewContact({ name: "", phone: "", notes: "" });
+    }
+  };
+
   const validateFields = () => {
     const newErrors = {};
     if (!basicInfo.name.trim()) newErrors.name = "이름은 필수입니다.";

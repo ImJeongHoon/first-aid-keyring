@@ -1,87 +1,113 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { AlertCircle, ArrowLeft, Eye, EyeOff } from "lucide-react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { AlertCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [agreeTerms, setAgreeTerms] = useState(false)
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectPath = searchParams.get("redirect") || "/"
-  const { login, isAuthenticated } = useAuth()
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/";
+  const { login, isAuthenticated } = useAuth();
 
   // 이미 로그인한 경우 리디렉션
   useEffect(() => {
     if (isAuthenticated()) {
-      router.push(redirectPath)
+      router.push(redirectPath);
     }
-  }, [isAuthenticated, router, redirectPath])
+  }, [isAuthenticated, router, redirectPath]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
 
     // 유효성 검사
     if (!name || !email || !password || !confirmPassword) {
-      setError("모든 필드를 입력해주세요")
-      return
+      setError("모든 필드를 입력해주세요");
+      return;
     }
 
     if (password !== confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다")
-      return
+      setError("비밀번호가 일치하지 않습니다");
+      return;
     }
 
     if (!agreeTerms) {
-      setError("이용약관에 동의해주세요")
-      return
+      setError("이용약관에 동의해주세요");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      // 실제 회원가입 로직 구현
-      console.log("회원가입 정보:", name, email, password)
+      console.log("회원가입 정보:", name, email, password);
 
-      // API 호출 시뮬레이션
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // ✅ 실제 API 요청
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+          }),
+        }
+      );
 
-      // 회원가입 성공 - 사용자 정보 저장 및 자동 로그인
+      // ❌ 실패 처리
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "회원가입 실패");
+      }
+
+      // ✅ 성공 시 사용자 정보 저장 및 로그인 처리
+      const result = await res.json();
+
       const userData = {
         name: name,
         email: email,
-        id: "user_" + Math.random().toString(36).substr(2, 9),
-      }
+        id: "user_" + Math.random().toString(36).substr(2, 9), // 서버에서 id 안 주면 임시 생성
+      };
 
-      login(userData)
-
-      // 회원가입 성공 후 리디렉션 경로로 이동
-      router.push(redirectPath)
+      login(userData);
+      router.push(redirectPath);
     } catch (err) {
-      setError("회원가입 중 오류가 발생했습니다")
+      console.error("❌ 회원가입 실패:", err);
+      setError(err.message || "회원가입 중 오류가 발생했습니다");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white px-4 py-8 sm:py-12">
@@ -101,7 +127,9 @@ export default function RegisterPage() {
               </div>
             </div>
           </Link>
-          <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-gray-900">FirstAidKeyring</h2>
+          <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-gray-900">
+            FirstAidKeyring
+          </h2>
           <p className="mt-2 text-sm text-gray-600">
             생명을 지키는 작은 태그
             <br />
@@ -111,12 +139,19 @@ export default function RegisterPage() {
 
         <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm rounded-2xl">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xl sm:text-2xl font-bold text-center">회원가입</CardTitle>
-            <CardDescription className="text-center">FirstAidKeyring 서비스에 가입하세요</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl font-bold text-center">
+              회원가입
+            </CardTitle>
+            <CardDescription className="text-center">
+              FirstAidKeyring 서비스에 가입하세요
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
             {error && (
-              <Alert variant="destructive" className="mb-4 bg-red-50 border-red-200">
+              <Alert
+                variant="destructive"
+                className="mb-4 bg-red-50 border-red-200"
+              >
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>오류</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
@@ -181,7 +216,9 @@ export default function RegisterPage() {
                     type="button"
                     className="absolute inset-y-0 right-0 flex items-center pr-3"
                     onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
+                    aria-label={
+                      showPassword ? "비밀번호 숨기기" : "비밀번호 표시"
+                    }
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-gray-400" />
@@ -193,7 +230,10 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-sm font-medium"
+                >
                   비밀번호 확인
                 </Label>
                 <div className="relative">
@@ -209,7 +249,9 @@ export default function RegisterPage() {
                     type="button"
                     className="absolute inset-y-0 right-0 flex items-center pr-3"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    aria-label={showConfirmPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
+                    aria-label={
+                      showConfirmPassword ? "비밀번호 숨기기" : "비밀번호 표시"
+                    }
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-4 w-4 text-gray-400" />
@@ -235,11 +277,17 @@ export default function RegisterPage() {
                     이용약관 및 개인정보 처리방침에 동의합니다
                   </label>
                   <p className="text-xs text-gray-500">
-                    <Link href="/terms" className="text-red-600 hover:text-red-500 underline">
+                    <Link
+                      href="/terms"
+                      className="text-red-600 hover:text-red-500 underline"
+                    >
                       이용약관
                     </Link>{" "}
                     및{" "}
-                    <Link href="/privacy" className="text-red-600 hover:text-red-500 underline">
+                    <Link
+                      href="/privacy"
+                      className="text-red-600 hover:text-red-500 underline"
+                    >
                       개인정보 처리방침
                     </Link>
                     을 읽고 동의합니다.
@@ -260,7 +308,9 @@ export default function RegisterPage() {
             <p className="text-xs sm:text-sm text-gray-600">
               이미 계정이 있으신가요?{" "}
               <Link
-                href={`/login${redirectPath !== "/" ? `?redirect=${redirectPath}` : ""}`}
+                href={`/login${
+                  redirectPath !== "/" ? `?redirect=${redirectPath}` : ""
+                }`}
                 className="font-medium text-red-600 hover:text-red-500 transition-colors duration-200"
               >
                 로그인
@@ -280,5 +330,5 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
