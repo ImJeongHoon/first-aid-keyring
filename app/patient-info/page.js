@@ -187,7 +187,6 @@ export default function PatientInfoPage() {
         },
       });
 
-      // axios는 200~299 응답이면 무조건 try 블록 안으로 들어옵니다
       alert("✅ 환자 정보가 성공적으로 저장되었습니다.");
     } catch (err) {
       console.error("❌ 저장 중 오류:", err);
